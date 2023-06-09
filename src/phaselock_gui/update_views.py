@@ -57,7 +57,7 @@ def update_real_space_view(self, reset=False):
     # convert ROI pixel coordinates to Fourier units
     cx = np.fft.fftshift(qx)[int(x0),int(y0)]
     cy = np.fft.fftshift(qy)[int(x0),int(y0)]
-    sigma = R / obj.shape[0] 
+    sigma = R / obj.shape[0] / 2 # Extra factor of 2 to make the mask roughly fit in the GUI circle ROI
     print(f"cx:{cx}, cy:{cy}, sigma:{sigma}")
 
     dq = np.hypot(qx - cx, qy - cy)
@@ -69,7 +69,6 @@ def update_real_space_view(self, reset=False):
     # update ROI selector after snapping
     x0_snap = np.argmin(np.abs(cx - np.fft.fftshift(qx)[:,0])) - R
     y0_snap = np.argmin(np.abs(cy - np.fft.fftshift(qy)[0,:])) - R
-    print(f"Original pixels: {x0-R,y0-R}")
     print(f"Snap pixels: {x0_snap,y0_snap}")
     self.virtual_detector_roi.setPos(x0_snap,y0_snap,finish=False)
 
@@ -113,9 +112,9 @@ def update_real_space_view(self, reset=False):
     )
 
     # Show the mask for coordinate debugging
-    # self.diffraction_space_widget.setImage(
-    #     np.abs(np.fft.fftshift(np.fft.fft2(self.image)))*np.fft.fftshift(mask_approx), autoLevels=True
-    # )
+    self.diffraction_space_widget.setImage(
+        np.abs(np.fft.fftshift(np.fft.fft2(self.image)))*np.fft.fftshift(mask_pair), autoLevels=True
+    )
 
 
 def update_diffraction_space_view(self, reset=False):
