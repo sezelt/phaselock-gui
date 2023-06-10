@@ -170,14 +170,15 @@ class DataViewer(QMainWindow):
         # Set up the diffraction space window.
         self.diffraction_space_widget = pg.ImageView()
         self.diffraction_space_widget.setImage(np.zeros((512, 512)))
-        # self.diffraction_space_widget.getImageItem().setOpts(axisOrder="row-major")
+        self.diffraction_space_widget.getImageItem().setOpts(axisOrder="row-major")
         self.diffraction_space_view_text = pg.TextItem(
             "Slice", (200, 200, 200), None, (0, 1)
         )
         self.diffraction_space_widget.addItem(self.diffraction_space_view_text)
 
         # Create virtual detector ROI selector
-        x0, y0 = 512, 512
+        # x0, y0 = 512, 512
+        x0,y0 = 0,0
         xr, yr = 25, 25
         self.virtual_detector_roi = pg.CircleROI(
             [int(x0 - xr / 2), int(y0 - yr / 2)], [int(xr), int(yr)], pen=(3, 9)
