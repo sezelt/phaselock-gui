@@ -32,6 +32,9 @@ def update_real_space_view(self, reset=False):
     scaling_mode = self.vimg_scaling_group.checkedAction().text().replace("&", "")
     assert scaling_mode in ["Linear", "Log", "Square Root"], scaling_mode
 
+    snapping_mode = self.snapping_group.checkedAction().text().replace("&", "")
+    assert snapping_mode in ["None", "Center of Mass", "Maximum"], snapping_mode
+
     if self.image is None:
         return
 
@@ -59,27 +62,34 @@ def update_real_space_view(self, reset=False):
     cx = np.fft.fftshift(qx)[int(x0),int(y0)]
     cy = np.fft.fftshift(qy)[int(x0),int(y0)]
     sigma = R / obj.shape[0] / 2 # Extra factor of 2 to make the mask roughly fit in the GUI circle ROI
-    print(f"cx:{cx}, cy:{cy}, sigma:{sigma}")
+    # print(f"cx:{cx}, cy:{cy}, sigma:{sigma}")
 
     dq = np.hypot(qx - cx, qy - cy)
     mask_approx = dq < sigma
-    # refine the center coordinate using the CoM of the masked area
-    # cxrp, cyrp = py4DSTEM.process.utils.get_CoM(np.fft.fftshift(np.abs(objfft) * mask_approx))
-    # # convert back to un-fftshifted coordinates
-    # cxrp -= obj.shape[0]//2 # does this work right for even/odd sizes?
-    # cyrp -= obj.shape[1]//2
 
-    # refine the center coordinate using the max of the masked area
-    test_mask = gaussian_filter(np.abs(objfft) * mask_approx,2)
-    cxrp, cyrp = np.unravel_index(np.argmax(test_mask,axis=None),objfft.shape)
+    # refine the center coordinate
+    if snapping_mode == "None":
+        cx_refine, cy_refine = cx, cy
+    elif snapping_mode == "Center of Mass":
+        cxrp, cyrp = py4DSTEM.process.utils.get_CoM(np.fft.fftshift(np.abs(objfft) * mask_approx))
+        # convert back to un-fftshifted coordinates
+        cxrp -= obj.shape[0]//2 # does this work right for even/odd sizes?
+        cyrp -= obj.shape[1]//2
+        cx_refine, cy_refine = qx[int(cxrp),int(cyrp)], qy[int(cxrp),int(cyrp)]
+    elif snapping_mode == "Maximum":
+        # refine the center coordinate using the max of the masked area
+        test_mask = gaussian_filter(np.abs(objfft) * mask_approx,2)
+        cxrp, cyrp = np.unravel_index(np.argmax(test_mask,axis=None),objfft.shape)
+        cx_refine, cy_refine = qx[int(cxrp),int(cyrp)], qy[int(cxrp),int(cyrp)]
+    else:
+        raise ValueError(f"Uh-oh... we should not be here! Snapping mode {snapping_mode}")
 
-    cx_refine, cy_refine = qx[int(cxrp),int(cyrp)], qy[int(cxrp),int(cyrp)]
     dq = np.hypot(qx - cx_refine, qy - cy_refine)
 
     # update ROI selector after snapping
     x0_snap = np.argmin(np.abs(cx - np.fft.fftshift(qx)[:,0])) - R
     y0_snap = np.argmin(np.abs(cy - np.fft.fftshift(qy)[0,:])) - R
-    print(f"Snap pixels: {x0_snap,y0_snap}")
+    # print(f"Snap pixels: {x0_snap,y0_snap}")
     self.virtual_detector_roi.setPos(y0_snap,x0_snap,finish=False)
 
     mask = np.exp(-0.5 * dq**2 / sigma**2)/(sigma * np.sqrt(2.0 * np.pi))
@@ -121,14 +131,14 @@ def update_real_space_view(self, reset=False):
         autoLevels=True,
     )
 
-    # # Show the mask for coordinate debugging
-    # unmaskedFFT = np.abs(np.fft.fftshift(np.fft.fft2(self.image)))
-    # maskedFFT = unmaskedFFT*np.fft.fftshift(mask_pair)
-    # new_view = 2*maskedFFT + unmaskedFFT
-    # levels = (np.min(new_view), np.percentile(new_view,99.9))
-    # self.diffraction_space_widget.setImage(
-    #     new_view, levels=levels, autoRange=False,
-    # )
+    # Show the mask for coordinate debugging
+    unmaskedFFT = np.abs(np.fft.fftshift(np.fft.fft2(self.image)))
+    maskedFFT = unmaskedFFT*np.fft.fftshift(mask_pair)
+    new_view = 2*maskedFFT + unmaskedFFT
+    levels = (np.min(new_view), np.percentile(new_view,99.9))
+    self.diffraction_space_widget.setImage(
+        new_view, levels=levels, autoRange=False,
+    )
 
 
 def update_diffraction_space_view(self, reset=False):

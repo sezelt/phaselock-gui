@@ -91,6 +91,38 @@ class DataViewer(QMainWindow):
         self.load_auto_action.triggered.connect(self.load_data_auto)
         self.file_menu.addAction(self.load_auto_action)
 
+        # Snapping menu
+        self.snap_menu = QMenu("&Snapping",self)
+        self.menu_bar.addMenu(self.snap_menu)
+        snapping_group = QActionGroup(self)
+        snapping_group.setExclusive(True)
+        self.snapping_group = snapping_group
+
+        no_snap = QAction("None")
+        no_snap.setCheckable(True)
+        snapping_group.addAction(no_snap)
+        self.snap_menu.addAction(no_snap)
+        no_snap.triggered.connect(
+            partial(self.update_real_space_view, False)
+        )
+
+        CoM_snap = QAction("Center of Mass")
+        CoM_snap.setCheckable(True)
+        snapping_group.addAction(CoM_snap)
+        self.snap_menu.addAction(CoM_snap)
+        CoM_snap.triggered.connect(
+            partial(self.update_real_space_view, False)
+        )
+
+        max_snap = QAction("Maximum")
+        max_snap.setCheckable(True)
+        snapping_group.addAction(max_snap)
+        self.snap_menu.addAction(max_snap)
+        max_snap.setChecked(True)
+        max_snap.triggered.connect(
+            partial(self.update_real_space_view, False)
+        )
+
         # Scaling Menu
         self.scaling_menu = QMenu("&Scaling", self)
         self.menu_bar.addMenu(self.scaling_menu)
@@ -105,6 +137,7 @@ class DataViewer(QMainWindow):
 
         diff_scale_linear_action = QAction("Linear", self)
         diff_scale_linear_action.setCheckable(True)
+        diff_scale_linear_action.setChecked(True)
         diff_scale_linear_action.triggered.connect(
             partial(self.update_diffraction_space_view, True)
         )
@@ -125,7 +158,6 @@ class DataViewer(QMainWindow):
             partial(self.update_diffraction_space_view, True)
         )
         diff_scaling_group.addAction(diff_scale_sqrt_action)
-        diff_scale_sqrt_action.setChecked(True)
         self.scaling_menu.addAction(diff_scale_sqrt_action)
 
         self.scaling_menu.addSeparator()
