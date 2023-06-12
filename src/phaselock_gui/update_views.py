@@ -4,6 +4,7 @@ import py4DSTEM
 from skimage.color import lab2rgb
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import Normalize
+from matplotlib.cm import gray
 import warnings
 
 from phaselock_gui.utils import pg_point_roi
@@ -125,20 +126,28 @@ def update_real_space_view(self, reset=False):
     else:
         raise ValueError("Mode not recognized")
 
-    blended_image = phase_image
+    alpha_image = 1.0
+    alpha_overlay = 0.5
+
+    alpha_blended = alpha_overlay + alpha_image * (1 - alpha_overlay)
+    rgb_image = gray(Normalize()(new_view))[:,:,:3] # keep only RGB channels
+
+    blended_image = (phase_image * alpha_overlay + rgb_image * alpha_image * (1 - alpha_overlay)) / alpha_blended
+
     self.real_space_widget.setImage(
         blended_image,
         autoLevels=True,
     )
 
-    # Show the mask for coordinate debugging
-    unmaskedFFT = np.abs(np.fft.fftshift(np.fft.fft2(self.image)))
-    maskedFFT = unmaskedFFT*np.fft.fftshift(mask_pair)
-    new_view = 2*maskedFFT + unmaskedFFT
-    levels = (np.min(new_view), np.percentile(new_view,99.9))
-    self.diffraction_space_widget.setImage(
-        new_view, levels=levels, autoRange=False,
-    )
+    # TODO: Make this a menu item
+    # # Show the mask for coordinate debugging
+    # unmaskedFFT = np.abs(np.fft.fftshift(np.fft.fft2(self.image)))
+    # maskedFFT = unmaskedFFT*np.fft.fftshift(mask_pair)
+    # new_view = 2*maskedFFT + unmaskedFFT
+    # levels = (np.min(new_view), np.percentile(new_view,99.9))
+    # self.diffraction_space_widget.setImage(
+    #     new_view, levels=levels, autoRange=False,
+    # )
 
 
 def update_diffraction_space_view(self, reset=False):
@@ -160,7 +169,7 @@ def update_diffraction_space_view(self, reset=False):
         raise ValueError("Mode not recognized")
 
     levels = (np.min(new_view), np.percentile(new_view,99.9))
-    print(f"Levels: {levels}")
+    # print(f"Levels: {levels}")
 
     self.diffraction_space_widget.setImage(
         new_view, autoLevels=not levels, levels=levels, autoRange=reset
