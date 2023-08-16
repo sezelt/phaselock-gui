@@ -229,7 +229,9 @@ class DataViewer(QMainWindow):
         self.strain_x_widget = pg.ImageView()
         self.strain_x_widget.setImage(np.zeros((512, 512)))
         self.strain_x_widget.getImageItem().setOpts(axisOrder="row-major")
-        self.strain_x_widget_text = pg.TextItem("x Strain", (200, 200, 200), None, (0, 1))
+        self.strain_x_widget_text = pg.TextItem(
+            "x Strain", (200, 200, 200), None, (0, 1)
+        )
         self.strain_x_widget.addItem(self.strain_x_widget_text)
 
         # Create strain reference ROI selector
@@ -247,7 +249,9 @@ class DataViewer(QMainWindow):
         self.strain_y_widget = pg.ImageView()
         self.strain_y_widget.setImage(np.zeros((512, 512)))
         self.strain_y_widget.getImageItem().setOpts(axisOrder="row-major")
-        self.strain_y_widget_text = pg.TextItem("y Strain", (200, 200, 200), None, (0, 1))
+        self.strain_y_widget_text = pg.TextItem(
+            "y Strain", (200, 200, 200), None, (0, 1)
+        )
         self.strain_y_widget.addItem(self.strain_y_widget_text)
 
         # Create strain reference ROI selector

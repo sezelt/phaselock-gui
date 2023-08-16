@@ -20,7 +20,7 @@ def complex_to_Lab(
     angle = np.angle(im)
 
     L = Normalize(vmin=amin, vmax=amax, clip=True)(np.abs(im)) ** gamma
-    L = Normalize()(L)
+    L = Normalize()(L) if uniform_L is None else uniform_L / 128.0
 
     # attempt at polynomial saturation
     ab_prescale = 4 * L - 4 * L * L
@@ -158,7 +158,7 @@ def update_real_space_view(self, reset=False):
     self.real_space_widget.setImage(
         blended_image,
         autoLevels=False,
-        levels=[0,1],
+        levels=[0, 1],
     )
 
     self.update_strain_views()
@@ -217,22 +217,22 @@ def update_strain_views(self):
     alpha_blended = alpha_overlay + alpha_image * (1 - alpha_overlay)
 
     blended_image_x = (
-        CyRd(x_norm)[...,:3] * alpha_overlay
+        CyRd(x_norm)[..., :3] * alpha_overlay
         + self.image_rgb * alpha_image * (1 - alpha_overlay)
     ) / alpha_blended
 
     blended_image_y = (
-        CyRd(y_norm)[...,:3] * alpha_overlay
+        CyRd(y_norm)[..., :3] * alpha_overlay
         + self.image_rgb * alpha_image * (1 - alpha_overlay)
     ) / alpha_blended
 
     self.strain_x_widget.setImage(
         blended_image_x,
         autoLevels=False,
-        levels=[0,1],
+        levels=[0, 1],
     )
     self.strain_y_widget.setImage(
         blended_image_y,
         autoLevels=False,
-        levels=[0,1],
+        levels=[0, 1],
     )

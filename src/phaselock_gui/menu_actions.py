@@ -28,7 +28,7 @@ def load_file(self, filepath):
         raise ValueError(f"Unrecognized filetype {extension}")
 
     # move the selector to the center of the image
-    self.virtual_detector_roi.setPos(self.image.shape[0]//2, self.image.shape[1]//2)
+    self.virtual_detector_roi.setPos(self.image.shape[0] // 2, self.image.shape[1] // 2)
 
     self.update_diffraction_space_view(reset=True)
     self.update_real_space_view(reset=True)
