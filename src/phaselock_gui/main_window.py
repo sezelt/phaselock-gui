@@ -49,6 +49,7 @@ class DataViewer(QMainWindow):
     from phaselock_gui.update_views import (
         update_diffraction_space_view,
         update_real_space_view,
+        update_strain_views,
     )
 
     def __init__(self, argv):
@@ -92,7 +93,7 @@ class DataViewer(QMainWindow):
         self.file_menu.addAction(self.load_auto_action)
 
         # Snapping menu
-        self.snap_menu = QMenu("&Snapping",self)
+        self.snap_menu = QMenu("&Snapping", self)
         self.menu_bar.addMenu(self.snap_menu)
         snapping_group = QActionGroup(self)
         snapping_group.setExclusive(True)
@@ -102,26 +103,20 @@ class DataViewer(QMainWindow):
         no_snap.setCheckable(True)
         snapping_group.addAction(no_snap)
         self.snap_menu.addAction(no_snap)
-        no_snap.triggered.connect(
-            partial(self.update_real_space_view, False)
-        )
+        no_snap.triggered.connect(partial(self.update_real_space_view, False))
 
         CoM_snap = QAction("Center of Mass")
         CoM_snap.setCheckable(True)
         snapping_group.addAction(CoM_snap)
         self.snap_menu.addAction(CoM_snap)
-        CoM_snap.triggered.connect(
-            partial(self.update_real_space_view, False)
-        )
+        CoM_snap.triggered.connect(partial(self.update_real_space_view, False))
 
         max_snap = QAction("Maximum")
         max_snap.setCheckable(True)
         snapping_group.addAction(max_snap)
         self.snap_menu.addAction(max_snap)
         max_snap.setChecked(True)
-        max_snap.triggered.connect(
-            partial(self.update_real_space_view, False)
-        )
+        max_snap.triggered.connect(partial(self.update_real_space_view, False))
 
         # Scaling Menu
         self.scaling_menu = QMenu("&Scaling", self)
@@ -197,9 +192,8 @@ class DataViewer(QMainWindow):
         vimg_scaling_group.addAction(vimg_scale_sqrt_action)
         self.scaling_menu.addAction(vimg_scale_sqrt_action)
 
-
     def setup_views(self):
-        # Set up the diffraction space window.
+        # Set up the FFT view
         self.diffraction_space_widget = pg.ImageView()
         self.diffraction_space_widget.setImage(np.zeros((512, 512)))
         self.diffraction_space_widget.getImageItem().setOpts(axisOrder="row-major")
@@ -210,7 +204,7 @@ class DataViewer(QMainWindow):
 
         # Create virtual detector ROI selector
         # x0, y0 = 512, 512
-        x0,y0 = 0,0
+        x0, y0 = 0, 0
         xr, yr = 25, 25
         self.virtual_detector_roi = pg.CircleROI(
             [int(x0 - xr / 2), int(y0 - yr / 2)], [int(xr), int(yr)], pen=(3, 9)
@@ -223,7 +217,7 @@ class DataViewer(QMainWindow):
         # Name and return
         self.diffraction_space_widget.setWindowTitle("Reciprocal Space")
 
-        # Set up the real space window.
+        # Set up the real space view
         self.real_space_widget = pg.ImageView()
         self.real_space_widget.getImageItem().setOpts(axisOrder="row-major")
         self.real_space_widget.setImage(np.zeros((512, 512)))
@@ -231,16 +225,73 @@ class DataViewer(QMainWindow):
         # Name and return
         self.real_space_widget.setWindowTitle("Real Space")
 
+        # Set up the strain views
+        self.strain_x_widget = pg.ImageView()
+        self.strain_x_widget.setImage(np.zeros((512, 512)))
+        self.strain_x_widget.getImageItem().setOpts(axisOrder="row-major")
+        self.strain_x_widget_text = pg.TextItem("x Strain", (200, 200, 200), None, (0, 1))
+        self.strain_x_widget.addItem(self.strain_x_widget_text)
+
+        # Create strain reference ROI selector
+        # x0, y0 = 512, 512
+        # x0,y0 = 0,0
+        # xr, yr = 25, 25
+        # self.virtual_detector_strain_x = pg.CircleROI(
+        #     [int(x0 - xr / 2), int(y0 - yr / 2)], [int(xr), int(yr)], pen=(3, 9)
+        # )
+        # self.strain_x_widget.getView().addItem(self.virtual_detector_strain_x)
+        # self.virtual_detector_strain_x.sigRegionChangeFinished.connect(
+        #     self.update_strain_x_view
+        # )
+
+        self.strain_y_widget = pg.ImageView()
+        self.strain_y_widget.setImage(np.zeros((512, 512)))
+        self.strain_y_widget.getImageItem().setOpts(axisOrder="row-major")
+        self.strain_y_widget_text = pg.TextItem("y Strain", (200, 200, 200), None, (0, 1))
+        self.strain_y_widget.addItem(self.strain_y_widget_text)
+
+        # Create strain reference ROI selector
+        # x0, y0 = 512, 512
+        # x0,y0 = 0,0
+        # xr, yr = 25, 25
+        # self.virtual_detector_strain_x = pg.CircleROI(
+        #     [int(x0 - xr / 2), int(y0 - yr / 2)], [int(xr), int(yr)], pen=(3, 9)
+        # )
+        # self.strain_x_widget.getView().addItem(self.virtual_detector_strain_x)
+        # self.virtual_detector_strain_x.sigRegionChangeFinished.connect(
+        #     self.update_strain_y_view
+        # )
+
+        # Enable drag-and-drop on all the widgets
         self.diffraction_space_widget.setAcceptDrops(True)
-        self.real_space_widget.setAcceptDrops(True)
         self.diffraction_space_widget.dragEnterEvent = self.dragEnterEvent
-        self.real_space_widget.dragEnterEvent = self.dragEnterEvent
         self.diffraction_space_widget.dropEvent = self.dropEvent
+
+        self.real_space_widget.setAcceptDrops(True)
+        self.real_space_widget.dragEnterEvent = self.dragEnterEvent
         self.real_space_widget.dropEvent = self.dropEvent
 
-        layout = QHBoxLayout()
-        layout.addWidget(self.diffraction_space_widget, 1)
-        layout.addWidget(self.real_space_widget, 1)
+        self.strain_x_widget.setAcceptDrops(True)
+        self.strain_x_widget.dragEnterEvent = self.dragEnterEvent
+        self.strain_x_widget.dropEvent = self.dropEvent
+
+        self.strain_y_widget.setAcceptDrops(True)
+        self.strain_y_widget.dragEnterEvent = self.dragEnterEvent
+        self.strain_y_widget.dropEvent = self.dropEvent
+
+        # create a layout for the widgets
+        layout = QVBoxLayout()
+
+        layout_top = QHBoxLayout()
+        layout_top.addWidget(self.diffraction_space_widget, 1)
+        layout_top.addWidget(self.real_space_widget, 1)
+        layout.addLayout(layout_top)
+
+        layout_bottom = QHBoxLayout()
+        layout_bottom.addWidget(self.strain_x_widget, 1)
+        layout_bottom.addWidget(self.strain_y_widget, 1)
+        layout.addLayout(layout_bottom)
+
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
@@ -257,4 +308,3 @@ class DataViewer(QMainWindow):
         if len(files) == 1:
             print(f"Reieving dropped file: {files[0]}")
             self.load_file(files[0])
-
