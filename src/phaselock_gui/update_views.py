@@ -158,6 +158,7 @@ def update_real_space_view(self, reset=False):
     self.real_space_widget.setImage(
         blended_image,
         autoLevels=False,
+        levels=[0,1],
     )
 
     self.update_strain_views()
@@ -228,8 +229,10 @@ def update_strain_views(self):
     self.strain_x_widget.setImage(
         blended_image_x,
         autoLevels=False,
+        levels=[0,1],
     )
     self.strain_y_widget.setImage(
         blended_image_y,
         autoLevels=False,
+        levels=[0,1],
     )
