@@ -16,7 +16,7 @@ def load_file(self, filepath):
     print(f"Loading file {filepath}")
 
     ncempy_types = ["ser", "mrc", "emd", "dm3", "dm4"]
-    pil_types = ["png", "tif", "tiff"]
+    pil_types = ["jpg", "jpeg", "png", "tif", "tiff"]
 
     extension = os.path.splitext(filepath)[1][1:]
 

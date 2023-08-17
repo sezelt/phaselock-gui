@@ -104,6 +104,8 @@ def update_real_space_view(self, reset=False):
 
     dq = np.hypot(qx - cx_refine, qy - cy_refine)
 
+    self.mask_center = cx_refine, cy_refine
+
     # update ROI selector after snapping
     x0_snap = np.argmin(np.abs(cx - np.fft.fftshift(qx)[:, 0])) - R
     y0_snap = np.argmin(np.abs(cy - np.fft.fftshift(qy)[0, :])) - R
@@ -204,6 +206,8 @@ def update_strain_views(self):
     phi_unwrap = unwrap_phase(self.phi)
 
     gpgy, gpgx = np.gradient(phi_unwrap)
+    gpgy /= self.mask_center[0]
+    gpgx /= self.mask_center[1]
 
     exx_scale = np.percentile(np.abs(gpgx), 80)
     eyy_scale = np.percentile(np.abs(gpgy), 80)
