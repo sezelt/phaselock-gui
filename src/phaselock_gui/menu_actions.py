@@ -23,9 +23,12 @@ def load_file(self, filepath):
     if extension in ncempy_types:
         self.image = ncemio.read(filepath)["data"]
     elif extension in pil_types:
-        self.image = np.array(Image.open(filepath)).astype(np.float32).sum(axis=-1)
+        self.image = np.array(Image.open(filepath)).astype(np.float32)#.sum(axis=-1)
     else:
         raise ValueError(f"Unrecognized filetype {extension}")
+
+    if self.image.ndim > 2:
+        self.image = np.sum(self.image, axis=tuple(range(2,self.image.ndim)))
 
     # move the selector to the center of the image
     self.virtual_detector_roi.setPos(self.image.shape[0] // 2, self.image.shape[1] // 2)
